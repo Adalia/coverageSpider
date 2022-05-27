@@ -33,25 +33,28 @@ class DataOutput(object):
 
     def _datas_to_csv(self,datas):
         rows = []
-        print(datas)
+        print(datas["url"])
         parent_name = datas["parent_name"]
         parent_url = datas["url"]
         record_type = "预设业务类型"
         coverage_datas = datas["child_coverage"]
         if coverage_datas:
             for name,coverage in coverage_datas.items():
-                row = {}
-                row["主属性（必填）"] = self._formatting_name(name,parent_name)
-                row["业务类型（必填）"] = record_type
-                row["链接"] = self._formatting_url(parent_url,name)
-                row["上级"] = self._formatting_parent_name(parent_name,parent_url)
-                row["branch覆盖数量"] = coverage["branch"]["MC"]
-                row["branch覆盖率"] = self._formatting_coverage_percent(coverage["branch"]["percent"])
-                row["line覆盖数量"] =coverage["line"]["MC"]
-                row["line覆盖率"] = self._formatting_coverage_percent(coverage["line"]["percent"])
-                row["类型"]=self._formatting_type(parent_name)
-                row["负责人（必填）"]="李海荟"
-                rows.append(row)
+                if("$Result" in name or "$Arg" in name ):
+                    print(name)
+                else:
+                    row = {}
+                    row["主属性（必填）"] = self._formatting_name(name, parent_name)
+                    row["业务类型（必填）"] = record_type
+                    row["链接"] = self._formatting_url(parent_url, name)
+                    row["上级"] = self._formatting_parent_name(parent_name, parent_url)
+                    row["branch覆盖数量"] = coverage["branch"]["MC"]
+                    row["branch覆盖率"] = self._formatting_coverage_percent(coverage["branch"]["percent"])
+                    row["line覆盖数量"] =coverage["line"]["MC"]
+                    row["line覆盖率"] = self._formatting_coverage_percent(coverage["line"]["percent"])
+                    row["类型"]=self._formatting_type(parent_name)
+                    row["负责人（必填）"]="李海荟"
+                    rows.append(row)
                 
             return rows
         return None
@@ -72,13 +75,14 @@ class DataOutput(object):
 
         else:
            parent = parent.split('Package:')[1]
-           return "[" + parent + "]"+name
+           return "[" + parent.strip() + "]"+name
 
 
     def _formatting_parent_name(self, parent,url):
         if parent is not None and "." not in parent: #方法的父级要添加[action]命名,从上级的URL中获取
-            flag_list = url.split("/")
-            flag = flag_list[len(flag_list)-1]
+            flag_list = url.split("/")   #https://jenkins2.foneshare.cn/job/k8s-jacoco/109/jacoco/com.facishare.paas.appframework.core.predef.service/TagService
+            flag_url_p = flag_list[len(flag_list)-2].split(".") #com.facishare.paas.appframework.core.predef.service
+            flag = flag_url_p[len(flag_url_p)-1]  #得到service
             parent = "[" + flag + "]" + parent.split('Package:')[1].strip()
             return parent
         return parent
