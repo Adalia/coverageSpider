@@ -9,13 +9,13 @@ class DataOutput(object):
     def __init__(self):
         self.datas = []
 
-    def store_data(self,data):
+    def store_data(self,data,project):
         if data is None:
             return
 
        # headers =['主属性',"上级","业务类型","指令","指令覆盖率","分支","分支覆盖率","圈复杂度","圈覆盖率","行","行覆盖率","方法","方法覆盖率","类","类覆盖率","业务类型"]
         headers =self._get_headers()
-        rows = self._datas_to_csv(data)
+        rows = self._datas_to_csv(data,project)
         #Todo:判断输出数据的业务类型
         #Todo:增加自定义文件名
         if rows:
@@ -31,7 +31,7 @@ class DataOutput(object):
                     f_csv.writerows(rows)
 
 
-    def _datas_to_csv(self,datas):
+    def _datas_to_csv(self,datas,project):
         rows = []
         print(datas["url"])
         parent_name = datas["parent_name"]
@@ -44,7 +44,7 @@ class DataOutput(object):
                     print(name)
                 else:
                     row = {}
-                    row["主属性（必填）"] = self._formatting_name(name, parent_name)
+                    row["主属性（必填）"] = self._formatting_name(name, parent_name,project)
                     row["业务类型（必填）"] = record_type
                     row["链接"] = self._formatting_url(parent_url, name)
                     row["上级"] = self._formatting_parent_name(parent_name, parent_url)
@@ -54,6 +54,7 @@ class DataOutput(object):
                     row["line覆盖率"] = self._formatting_coverage_percent(coverage["line"]["percent"])
                     row["类型"]=self._formatting_type(parent_name)
                     row["负责人（必填）"]="李海荟"
+                    row["所属项目"]=project
                     rows.append(row)
                 
             return rows
@@ -61,23 +62,29 @@ class DataOutput(object):
 
     def _get_headers(self):
         return ['主属性（必填）', "业务类型（必填）", "链接", "上级", "branch覆盖数量", "branch覆盖率", "line覆盖数量", "line覆盖率", "类型", "负责人（必填）"]
-
+    #
     #Todo主属性避免重名，需要定义下输入内容，增加上级的最后一级,如[service]ButtonService
-    def _formatting_name(self,name,parent):
-        if "com.facishare.paas." in name:
-            name = name.split('com.facishare.paas.')
+    def _formatting_name(self,name,parent,project):
+        temp = project.split(".")
+        class_tag = temp[len(temp) - 1]
+        package_tag = project.replace(class_tag,"")
+
+        if parent is None:
+             #包名称,没有上级，直接截取，目的是让名称短一点，不然会超过主属性长度限制 比如com.facishare.paas.appframework.core.predef.action 最后的名称是appframework.core.predef.action
+            name = name.split(package_tag)
             if len(name)==2:
                 return name[1]
 
-        elif parent is not None and "appframework" in parent: #类
+       #类名称  名称前添加[action] [controller]的标记，获取上级名称的最后一个词 com.facishare.paas.appframework.core.predef.action 就获取action添加到类名称之前
+        elif class_tag in parent:
             name_list = parent.split(".")
             return "["+name_list[len(name_list)-1]+"]"+name
-
+        # 方法，去掉Package:前缀
         else:
            parent = parent.split('Package:')[1]
            return "[" + parent.strip() + "]"+name
 
-
+    #如果输出service层，那么service的上级想要正确关联数据，也要在名称前添加[service]、[action]等标记
     def _formatting_parent_name(self, parent,url):
         if parent is not None and "." not in parent: #方法的父级要添加[action]命名,从上级的URL中获取
             flag_list = url.split("/")   #https://jenkins2.foneshare.cn/job/k8s-jacoco/109/jacoco/com.facishare.paas.appframework.core.predef.service/TagService
@@ -113,4 +120,4 @@ class DataOutput(object):
         return int(percent.split('%')[0])
 
     def _get_headers(self):
-        return ['主属性（必填）',"业务类型（必填）","链接","上级","branch覆盖数量","branch覆盖率","line覆盖数量","line覆盖率","类型","负责人（必填）"]
+        return ['主属性（必填）',"业务类型（必填）","链接","上级","branch覆盖数量","branch覆盖率","line覆盖数量","line覆盖率","类型","负责人（必填）","所属项目"]

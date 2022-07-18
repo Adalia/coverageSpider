@@ -12,7 +12,7 @@ class SpiderMan(object):
         self.output = DataOutput()
         self.parser = HtmlParser()
 
-    def crawl(self,root_url,expect):
+    def crawl(self,root_url,expect,deep,project):
         # 添加入口 URL
         self.manager.add_new_url(root_url)
         # 判断 url 管理器中是否有新的 url()，同时判断抓去了多少个 url
@@ -23,13 +23,13 @@ class SpiderMan(object):
                 # 下载网页
                 html = self.downloader.download(new_url)
                 # 解析网页，提取数据和 url
-                new_urls,data = self.parser.parser(new_url,html,expect)
+                new_urls,data = self.parser.parser(new_url,html,expect,deep)
                 # 将抽取的 URL 添加到 URL 管理器中
                 if new_urls:
                     self.manager.add_new_urls(new_urls)
                 # 存储数据
                 if data:
-                    self.output.store_data(data)
+                    self.output.store_data(data,project)
 
             # except Exception as e:
             #     print("crawl failed")
@@ -37,19 +37,25 @@ class SpiderMan(object):
 
 if __name__=="__main__":
     param = sys.argv
-    jenkins_num = "98"
-    # if len(param) ==1 :
-    #     if isinstance(param[0],"number"):
-    #         jenkins_num = param[0]
-    #Todo: 开始前清空或删除文件
-    #Todo: 增加配置文件指定抓取的URL
-    # Todo: 入参1= 文件名称，入参2=抓取深度（1=包，2=类，3=方法）
     jenkins_address = "https://jenkins2.foneshare.cn/job/k8s-jacoco/"
-    jacoco_url = jenkins_address + jenkins_num +"/jacoco"
-    #jacoco_url_1 = "https://jenkins2.foneshare.cn/job/k8s-jacoco/98/jacoco/com.facishare.paas.appframework.core.predef.service/"
-    packages = ["com.facishare.paas.appframework.core.predef.service",
-                "com.facishare.paas.appframework.core.predef.action",
-                "com.facishare.paas.appframework.core.predef.controller"]
+
+    jenkins_num = "238"
+    jacoco_url = jenkins_address + jenkins_num + "/jacoco"
+
+    project="com.facishare.paas.appframework"
+    expect = ["com.facishare.paas.appframework.core.predef.service",  "com.facishare.paas.appframework.core.predef.action", "com.facishare.paas.appframework.core.predef.controller"]
+    need_method =  ["com.facishare.paas.appframework.core.predef.service"]
+
     spider_man = SpiderMan()
-    spider_man.crawl(jacoco_url,packages)
-    #spider_man.crawl(jacoco_url_1, packages)
+    spider_man.crawl(jacoco_url, expect, need_method, project)
+
+    ##社交组测试
+    # jenkins_num = "308"
+    # jacoco_url = jenkins_address + jenkins_num + "/jacoco"
+    # # jacoco_url_1 = "https://jenkins2.foneshare.cn/job/k8s-jacoco/98/jacoco/com.facishare.paas.appframework.core.predef.service/"
+    # expect = ["com.facishare.social.device.predefine.action", "com.facishare.social.device.predefine.controller",
+    #           "com.facishare.social.device.predefine.service"]
+    # need_method = "com.facishare.social.device.predefine.service"
+    # project = "com.facishare.social"
+    # spider_man = SpiderMan()
+    # spider_man.crawl(jacoco_url, expect, need_method, project)

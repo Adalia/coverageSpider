@@ -7,7 +7,7 @@ from bs4 import element
 
 class HtmlParser(object):
 
-    def parser(self,page_url,html_cont,expect):
+    def parser(self,page_url,html_cont,expect,deep):
         '''
         用于解析网页内容，抽取URL和数据
         :param page_url: 下载页面的URL
@@ -17,11 +17,11 @@ class HtmlParser(object):
         if page_url is None or html_cont is None:
             return
         soup = BeautifulSoup(html_cont,'html.parser')
-        new_urls = self._get_new_urls(page_url,soup,expect)
+        new_urls = self._get_new_urls(page_url,soup,expect,deep)
         new_data = self._get_new_data(page_url,soup)
         return new_urls,new_data
 
-    def _get_new_urls(self,page_url,soup,expect):
+    def _get_new_urls(self,page_url,soup,expect,deep):
         '''
         抽取新的URL集合
         :param page_url: 下载页面的URL
@@ -38,11 +38,13 @@ class HtmlParser(object):
                 new_url = link.text
                 # Todo 在expect入参中指定抓取层级
                 # 由于service层是一个类多个方法，所有抓取到方法层
-                if "appframework.core.predef.service" in page_url:
-                    new_full_url = urljoin(page_url + "/", new_url)
-                    new_urls.add(new_full_url)
+                if deep is not None:
+                    for item in deep:
+                         if item in page_url:
+                            new_full_url = urljoin(page_url + "/", new_url)
+                            new_urls.add(new_full_url)
                 # 只需要new_url在expect中加入到URL 并且 不能是方法（即不包含括号）
-                elif new_url in expect:
+                if new_url in expect:
                     # 非service包忽略方法
                     if "(" not in new_url and ")" not in new_url:
                         new_full_url = urljoin(page_url + "/", new_url)
