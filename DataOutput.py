@@ -9,13 +9,13 @@ class DataOutput(object):
     def __init__(self):
         self.datas = []
 
-    def store_data(self,data,project):
+    def store_data(self,data,project,team_info):
         if data is None:
             return
 
        # headers =['主属性',"上级","业务类型","指令","指令覆盖率","分支","分支覆盖率","圈复杂度","圈覆盖率","行","行覆盖率","方法","方法覆盖率","类","类覆盖率","业务类型"]
         headers =self._get_headers()
-        rows = self._datas_to_csv(data,project)
+        rows = self._datas_to_csv(data,project,team_info)
         #Todo:判断输出数据的业务类型
         #Todo:增加自定义文件名
         if rows:
@@ -31,12 +31,13 @@ class DataOutput(object):
                     f_csv.writerows(rows)
 
 
-    def _datas_to_csv(self,datas,project):
+    def _datas_to_csv(self,datas,project,team_info):
         rows = []
         print(datas["url"])
         parent_name = datas["parent_name"]
         parent_url = datas["url"]
-        record_type = "预设业务类型"
+        record_type = team_info["业务类型"]
+        owner = team_info["owner"]
         coverage_datas = datas["child_coverage"]
         if coverage_datas:
             for name,coverage in coverage_datas.items():
@@ -53,7 +54,7 @@ class DataOutput(object):
                     row["line覆盖数量"] =coverage["line"]["MC"]
                     row["line覆盖率"] = self._formatting_coverage_percent(coverage["line"]["percent"])
                     row["类型"]=self._formatting_type(parent_name)
-                    row["负责人（必填）"]="李海荟"
+                    row["负责人（必填）"]= owner
                     row["所属项目"]=project
                     rows.append(row)
                 

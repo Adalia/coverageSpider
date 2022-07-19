@@ -12,7 +12,7 @@ class SpiderMan(object):
         self.output = DataOutput()
         self.parser = HtmlParser()
 
-    def crawl(self,root_url,expect,deep,project):
+    def crawl(self,root_url,expect,deep,project,team_info):
         # 添加入口 URL
         self.manager.add_new_url(root_url)
         # 判断 url 管理器中是否有新的 url()，同时判断抓去了多少个 url
@@ -29,7 +29,7 @@ class SpiderMan(object):
                     self.manager.add_new_urls(new_urls)
                 # 存储数据
                 if data:
-                    self.output.store_data(data,project)
+                    self.output.store_data(data,project,team_info)
 
             # except Exception as e:
             #     print("crawl failed")
@@ -45,7 +45,8 @@ if __name__=="__main__":
     project="com.facishare.paas.appframework"
     expect = ["com.facishare.paas.appframework.core.predef.service",  "com.facishare.paas.appframework.core.predef.action", "com.facishare.paas.appframework.core.predef.controller"]
     need_method =  ["com.facishare.paas.appframework.core.predef.service"]
-
+    #不同团队操作时该信息必须修改
+    team_info ={"业务类型":"预设业务类型","owner":"李海荟"}
     spider_man = SpiderMan()
     spider_man.crawl(jacoco_url, expect, need_method, project)
 
